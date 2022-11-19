@@ -8,7 +8,9 @@ from torch.utils.data import Dataset, DataLoader
 from src.constant import ROOT
 import torch
 from src.utils.config import Config
+from pathlib2 import Path
 from src.trainer.mnist_trainer import Trainer
+import seaborn as sns
 
 
 if __name__ == "__main__":
@@ -17,9 +19,11 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, help="Epochs", default=15)
     parser.add_argument("--batch-size", type=int,
                         help="Batch Size", default=64)
+    parser.add_argument("-w", "--workspace", help="workspace path")
+    parser.add_argument("-n", "--name", help="Experiment Name")
 
     args = parser.parse_args()
-
+    sns.set_style("darkgrid")
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
@@ -29,17 +33,18 @@ if __name__ == "__main__":
     scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
     train_dataset = datasets.MNIST(
         ROOT.parent / 'dataset', train=True, download=True, transform=transform)
-    # train_dataset = torch.utils.data.Subset(train_dataset, list(range(1000))) # TODO: remove this line
+    # train_dataset = torch.utils.data.Subset(train_dataset, list(range(100))) # TODO: remove this line
 
     test_dataset = datasets.MNIST(
         ROOT.parent / 'dataset', train=False, transform=transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size)
-    workspace = ROOT.parent / 'workspace'
+    workspace = Path(args.workspace)
+    workspace.mkdir(parents=True, exist_ok=True)
     criterion = F.nll_loss
     wandb_config = WandbConfig("ml-training-template", "huakunai", True)
-    config = Config(args.epochs, args.batch_size,
-                    1, workspace, 5, wandb_config)
+    config = Config(epochs=args.epochs, batch_size=args.batch_size,
+                    save_period=5, checkpoint_dir=workspace, num_worker=5, wandb=wandb_config, exp_name=args.name)
 
     trainer = Trainer(model, optimizer, scheduler, criterion,
                       config, train_dataset, train_loader, test_loader)

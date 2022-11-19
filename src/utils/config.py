@@ -19,13 +19,9 @@ class Config:
     # criterion: Union[torch.nn.Module, Callable]
     # optimizer: torch.optim.Optimizer
     num_worker: int # If any error occurs related to multiprocessing, try change this parameter to 0.
+    exp_name: str = None
     wandb: Optional[WandbConfig] = None
     start_epoch: int = 1
     train_set_percentage: float = 0.9 # percentage of dataset used for training, the rest is used for testing
     test_only: bool = False # Run test only (entire dataset used for testing)
     device: torch.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-
-if __name__ == "__main__":
-    c = Config(10, 10, 10, None, None, None, 1, 0)
-    print(c)

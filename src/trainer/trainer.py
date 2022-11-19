@@ -143,7 +143,7 @@ class BaseTrainer(ABC):
         """
         self.model = self.model.to(self.config.device)
         if self.config.wandb is not None:
-            wandb.init(self.config.wandb.project, self.config.wandb.entity)
+            wandb.init(self.config.wandb.project, self.config.wandb.entity, name=self.config.exp_name)
             self.wandb_config_log(
                 {"batch_size": self.config.batch_size, "epochs": self.config.epochs})
             if self.config.wandb.watch_model:
@@ -198,20 +198,13 @@ class BaseTrainer(ABC):
         })
         history_df.to_csv(self.history_csv_path)
 
-        np.savetxt(self.config.checkpoint_dir / 'valid_loss.txt', self.valid_losses)
-        np.savetxt(self.config.checkpoint_dir / 'train_loss.txt', self.train_losses)
         if len(self.train_losses) != 0 and len(self.valid_losses) != 0:
             self.logger.debug("plot training and validation loss")
             fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 7))
-            axes[0].plot(list(range(1, len(self.train_losses) + 1)),
-                         self.train_losses)
-            axes[0].set_xlabel("epoch")
+            sns.lineplot(data=history_df, x='epoch', y='train_loss', ax=axes[0])
+            sns.lineplot(data=history_df, x='epoch', y='valid_loss', ax=axes[1])
             axes[0].set_ylabel("loss")
             axes[0].set_title("Training Loss")
-
-            axes[1].plot(list(range(1, len(self.valid_losses) + 1)),
-                         self.valid_losses)
-            axes[1].set_xlabel("epoch")
             axes[1].set_ylabel("loss")
             axes[1].set_title("Validation Loss")
             fig.savefig(self.config.checkpoint_dir / 'loss.png')
@@ -250,5 +243,3 @@ class BaseTrainer(ABC):
             plt.ylabel("learning rates")
             plt.title("Learning Rates")
             plt.close()
-            np.savetxt(self.config.checkpoint_dir /
-                       'learning_rates.txt', self.learning_rates)
