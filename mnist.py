@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", type=int,
                         help="Batch Size", default=64)
     parser.add_argument("-w", "--workspace", help="workspace path")
-    parser.add_argument("-n", "--name", help="Experiment Name")
+    parser.add_argument("-n", "--name", help="Experiment Name, will be used in wandb")
 
     args = parser.parse_args()
     sns.set_style("darkgrid")
